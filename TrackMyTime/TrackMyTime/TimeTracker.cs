@@ -10,21 +10,11 @@ namespace TrackMyTime
     {
         private int nextUpdate = 0;
         private long _lastTrackedTimeTick = -1;
-
-        private StreamWriter _sw = null;
-
+        private string path;
 
         public void Awake()
         {
-            var path = OptionsWrapper<Options>.Options.LogFileLocation;
-            try
-            {
-                _sw = File.AppendText(path);
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.LogException(e);
-            }
+            path = OptionsWrapper<Options>.Options.LogFileLocation;
         }
 
         public void Update()
@@ -39,28 +29,25 @@ namespace TrackMyTime
             SerializableDataExtension.SpentTimeMSecs += diffTicks / 10000;
             var spendTimeStr = TimeSpanFormat.ToString(timeSpan);
             Mod.UpdateLabelText(spendTimeStr);
-            if (Time.time >= nextUpdate)
+
+            if (OptionsWrapper<Options>.Options.OutputEnabled && Time.time >= nextUpdate)
             {
                 nextUpdate = Mathf.FloorToInt(Time.time) + OptionsWrapper<Options>.Options.LogIntervalSecs;
-                StringBuilder builder = new StringBuilder();
-                builder.Append(string.Format($"{{0:{OptionsWrapper<Options>.Options.DateTimeFormat}}}", DateTime.Now));
-                if (OptionsWrapper<Options>.Options.LogCityName)
+                try
                 {
-                    builder.Append(" @");
-                    builder.Append(SimulationManager.instance?.m_metaData?.m_CityName);
+                    using (var sw = new StreamWriter(path, false))
+                    {
+                        sw.WriteLine(TimeSpanFormat.ToString(timeSpan,
+                            (ExternalLogFormat)OptionsWrapper<Options>.Options.LogFormat));
+                        sw.Flush();
+                    }
                 }
-                builder.Append(": ");
-                builder.Append(spendTimeStr);
-                _sw?.WriteLine(builder.ToString());
-                _sw?.Flush();
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.LogException(e);
+                }
             }
             _lastTrackedTimeTick = utcNowTicks;
-        }
-
-        public void OnDestroy()
-        {
-            _sw?.Flush();
-            _sw?.Close();
         }
     }
 }

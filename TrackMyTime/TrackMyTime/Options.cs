@@ -12,17 +12,17 @@ namespace TrackMyTime
         [Label("...", "Time spent in current city")]
         [XmlIgnore]
         public object Label { get; set; }
-        
+
+        [Checkbox("Output time to log (default: false)", LOG_FILE_OPTIONS)]
+        public bool OutputEnabled { get; set; } = false;
+
         [Textfield("Log file location (default: TrackMyTime.log in game's root folder)", LOG_FILE_OPTIONS)]
         public string LogFileLocation { get; set; } = "TrackMyTime.log";
 
-        [Slider("How ofter log entries, seconds (default: 1)", 1, 3600, 1, LOG_FILE_OPTIONS)]
+        [Slider("How often overwrite log, seconds (default: 1)", 1, 3600, 1, LOG_FILE_OPTIONS)]
         public int LogIntervalSecs { get; set; } = 1;
 
-        [Textfield("Timestamp format (default: M/d/yyyy h:mm:ss tt)", LOG_FILE_OPTIONS)]
-        public string DateTimeFormat { get; set; } = "M/d/yyyy h:mm:ss tt";
-
-        [Checkbox("Log city name (default: true)", LOG_FILE_OPTIONS)]
-        public bool LogCityName { get; set; } = true;
+        [DropDown("Log format", nameof(ExternalLogFormat), LOG_FILE_OPTIONS)]
+        public int LogFormat { get; set; } = 0;
     }
 }
